@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learn 3D Animation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0d0d1a;
+      --muted: #5b5b6e;
+      --accent: #7c5cf5;
+      --accent-2: #3fc5f0;
+      --pill: #f2f1f7;
+      --lilac: #f4f2ff;
+      --gutter: clamp(16px, 5vw, 84px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Figtree", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* The 3D object lives in one fixed canvas that floats above section backgrounds
+       but below section text, so it can travel between sections as you scroll. */
+    #scene {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .panel {
+      position: relative;
+      min-height: 100vh;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel > .inner {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 96px var(--gutter);
+    }
+
+    /* ---------- Nav ---------- */
+    .nav {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px var(--gutter);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #5ad0f5 0%, #8b7cf6 55%, #c58af9 100%);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 2.2vw, 34px);
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .nav-links a:hover { opacity: 0.6; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-dark {
+      padding: 14px 24px;
+      font-size: 15px;
+      color: #fff !important;
+      background: var(--text);
+    }
+
+    .btn-dark:hover { opacity: 1 !important; transform: translateY(-1px); }
+
+    .btn-primary {
+      align-self: flex-start;
+      padding: 20px 36px;
+      font-size: 18px;
+      font-weight: 500;
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 18px 40px -12px rgba(124, 92, 245, 0.55);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 46px -12px rgba(124, 92, 245, 0.7);
+    }
+
+    .btn-primary svg { transition: transform 0.2s; }
+    .btn-primary:hover svg { transform: translateX(4px); }
+
+    .btn-light {
+      align-self: flex-start;
+      padding: 18px 32px;
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .btn-light:hover { transform: translateY(-2px); }
+
+    /* ---------- Hero ---------- */
+    .hero .inner { padding-top: 40px; max-width: 760px; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      align-self: flex-start;
+      padding: 8px 16px;
+      margin-bottom: 28px;
+      border-radius: 999px;
+      background: var(--pill);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .eyebrow .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    h1, h2 {
+      font-weight: 700;
+      letter-spacing: -0.045em;
+    }
+
+    h1 {
+      font-size: clamp(48px, 6.4vw, 92px);
+      line-height: 1;
+      margin-bottom: 48px;
+    }
+
+    .grad {
+      background: linear-gradient(100deg, #8a5cf6 0%, #7b7cf7 45%, #3fc5f0 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* ---------- Numbered sections ---------- */
+    .copy { max-width: 460px; }
+    .copy.right { margin-left: auto; margin-right: 4vw; }
+
+    .num {
+      display: block;
+      font-size: clamp(110px, 14vw, 200px);
+      font-weight: 800;
+      line-height: 0.8;
+      letter-spacing: -0.06em;
+      margin-bottom: 8px;
+      background: linear-gradient(180deg, rgba(124, 92, 245, 0.28), rgba(124, 92, 245, 0.06));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h2 {
+      font-size: clamp(38px, 4.4vw, 64px);
+      line-height: 1.02;
+      margin-bottom: 20px;
+    }
+
+    .copy p {
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .about { background: var(--lilac); }
+    .study { background: var(--lilac); }
+
+    /* soft pastel shapes standing in for the reference's flower photos */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(8px);
+      pointer-events: none;
+    }
+
+    .about .blob.a {
+      width: 46vw; height: 46vw; left: -14vw; top: -18vw;
+      background: radial-gradient(circle at 60% 60%, #d9b8ff, #b99cff 40%, rgba(185, 156, 255, 0) 70%);
+    }
+    .about .blob.b {
+      width: 30vw; height: 30vw; right: -8vw; bottom: -12vw;
+      background: radial-gradient(circle, rgba(63, 197, 240, 0.35), rgba(63, 197, 240, 0) 70%);
+    }
+
+    .study .blob.a {
+      width: 40vw; height: 40vw; left: -16vw; top: 18%;
+      background: radial-gradient(circle at 55% 50%, #f3a6e8, #c58af9 35%, rgba(197, 138, 249, 0) 70%);
+    }
+
+    /* 02: full-bleed violet panel, like the reference's purple photo */
+    .invite {
+      color: #fff;
+      background:
+        radial-gradient(40% 50% at 78% 62%, rgba(197, 138, 249, 0.85), transparent 70%),
+        radial-gradient(35% 40% at 15% 85%, rgba(63, 197, 240, 0.45), transparent 70%),
+        radial-gradient(30% 35% at 55% 20%, rgba(139, 92, 246, 0.6), transparent 70%),
+        linear-gradient(160deg, #2a1470 0%, #4a23b8 55%, #6d3fe0 100%);
+    }
+
+    .invite .inner { justify-content: flex-start; padding-top: 14vh; }
+    .invite .num {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.08));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .invite .copy p { color: rgba(255, 255, 255, 0.78); }
+
+    /* ---------- Final CTA + footer ---------- */
+    .finale { background: var(--lilac); }
+    .finale .inner { justify-content: space-between; align-items: center; text-align: center; padding-bottom: 40px; }
+    .finale h2 { margin-bottom: 28px; }
+    .finale .btn-primary { align-self: center; }
+
+    .footer {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      text-align: left;
+    }
+
+    .footer .brand { font-size: clamp(28px, 3vw, 40px); font-weight: 700; letter-spacing: -0.03em; }
+    .footer .tag { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+    .socials {
+      display: grid;
+      grid-template-columns: repeat(2, auto);
+      gap: 6px 36px;
+      list-style: none;
+    }
+
+    .socials a { color: var(--text); text-decoration: none; font-size: 15px; }
+    .socials a:hover { color: var(--accent); }
+
+    /* ---------- Reveal animations ---------- */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+    .reveal.in { opacity: 1; transform: none; }
+    .reveal.d1 { transition-delay: 0.1s; }
+    .reveal.d2 { transition-delay: 0.2s; }
+    .reveal.d3 { transition-delay: 0.3s; }
+
+    /* ---------- Small screens: object up top, text below ---------- */
+    @media (max-width: 900px) {
+      .panel > .inner { justify-content: flex-end; padding-bottom: 56px; }
+      .hero .inner { padding-bottom: 56px; }
+      .copy.right { margin: 0; }
+      .invite .inner { justify-content: flex-end; padding-top: 96px; }
+      .finale .inner { justify-content: space-between; padding-top: 72px; }
+      .finale .cta { margin-bottom: 38vh; }
+    }
+
+    @media (max-width: 640px) {
+      .nav-links li:not(:last-child) { display: none; }
+      .logo { font-size: 19px; }
+      .footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { transition: none; opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="scene" aria-hidden="true"></canvas>
+
+  <!-- Hero -->
+  <section class="panel hero" data-stage="hero">
+    <nav class="nav">
+      <a href="#" class="logo"><span class="logo-mark"></span>Motion3D</a>
+      <ul class="nav-links">
+        <li><a href="#about">About the course</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="#join" class="btn btn-dark">Join now</a></li>
+      </ul>
+    </nav>
+
+    <div class="inner">
+      <span class="eyebrow reveal"><span class="dot"></span>Your next landing page could look like this</span>
+      <h1 class="reveal d1">Learn <span class="grad">3D animations</span> in less than 3 days</h1>
+      <a href="#join" class="btn btn-primary reveal d2">Join now
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </section>
+
+  <!-- 01 -->
+  <section class="panel about" id="about" data-stage="about">
+    <span class="blob a"></span><span class="blob b"></span>
+    <div class="inner">
+      <div class="copy right">
+        <span class="num reveal">01</span>
+        <h2 class="reveal d1">Explore the universe of <span class="grad">3D motion</span></h2>
+        <p class="reveal d2">Every lesson is built to take you from zero to confident with the newest tools in 3D animation. Whether you're starting fresh or levelling up, you'll ship real scenes by day three.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section class="panel invite" id="join" data-stage="invite">
+    <div class="inner">
+      <div class="copy">
+        <span class="num reveal">02</span>
+        <h2 class="reveal d1">Claim your early invite</h2>
+        <p class="reveal d2">Get early access to the next cohort. Add your name to the list and be first to enrol with founding-student pricing.</p>
+        <a href="#contact" class="btn btn-light reveal d3">Join now
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section class="panel study" data-stage="study">
+    <span class="blob a"></span>
+    <div class="inner">
+      <div class="copy right">
+        <span class="num reveal">03</span>
+        <h2 class="reveal d1">Study and build with us</h2>
+        <p class="reveal d2">Join a small group of artists, get notes from mentors, and watch your ideas come alive in real 3D depth.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="panel finale" id="contact" data-stage="finale">
+    <div class="inner">
+      <div class="cta">
+        <h2 class="reveal">Ready to start animating?</h2>
+        <a href="mailto:hello@example.com" class="btn btn-primary reveal d1">Join now
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+
+      <footer class="footer">
+        <div>
+          <div class="brand">Motion3D</div>
+          <div class="tag">A 3D motion academy</div>
+        </div>
+        <ul class="socials">
+          <li><a href="#">YouTube</a></li>
+          <li><a href="#">Facebook</a></li>
+          <li><a href="#">LinkedIn</a></li>
+          <li><a href="#">Dribbble</a></li>
+          <li><a href="#">Instagram</a></li>
+        </ul>
+      </footer>
+    </div>
+  </section>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Fade text in as each section scrolls into view
+    (function () {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("in"); });
+      }, { threshold: 0.2 });
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    })();
+
+    (function () {
+      const canvas = document.getElementById("scene");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.outputEncoding = THREE.sRGBEncoding;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+      camera.position.set(0, 0, 12);
+
+      // Soft studio lighting for a glossy, pastel look
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xb9b0ff, 0.55));
+      const key = new THREE.DirectionalLight(0xffffff, 0.75);
+      key.position.set(-3, 4, 6);
+      scene.add(key);
+      const fill = new THREE.PointLight(0xf0d8ff, 0.8, 40);
+      fill.position.set(5, -3, 6);
+      scene.add(fill);
+      const spec = new THREE.PointLight(0xffffff, 0.9, 30);
+      spec.position.set(2, 3, 8);
+      scene.add(spec);
+
+      // group = scroll-driven placement, wrap = mouse parallax on top of it
+      const group = new THREE.Group();
+      const wrap = new THREE.Group();
+      group.add(wrap);
+      scene.add(group);
+
+      // Paint a pink → violet → sky-blue gradient across the geometry via vertex colors
+      function paintGradient(geo, stops) {
+        geo.computeBoundingBox();
+        const { min, max } = geo.boundingBox;
+        const pos = geo.attributes.position;
+        const colors = new Float32Array(pos.count * 3);
+        const c = new THREE.Color();
+        for (let i = 0; i < pos.count; i++) {
+          // diagonal blend so the color sweeps across the shape
+          const t = ((pos.getX(i) - min.x) / (max.x - min.x)) * 0.6 + ((max.y - pos.getY(i)) / (max.y - min.y)) * 0.4;
+          const s = Math.min(stops.length - 1.001, t * (stops.length - 1));
+          const k = Math.floor(s);
+          c.copy(stops[k]).lerp(stops[k + 1], s - k).convertSRGBToLinear();
+          colors.set([c.r, c.g, c.b], i * 3);
+        }
+        geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      }
+
+      const glossy = () =>
+        new THREE.MeshPhysicalMaterial({
+          vertexColors: true,
+          roughness: 0.22,
+          metalness: 0,
+          clearcoat: 1,
+          clearcoatRoughness: 0.08,
+        });
+
+      // Hero object: thick glossy knot
+      const knotGeo = new THREE.TorusKnotGeometry(1.45, 0.55, 320, 48, 2, 3);
+      paintGradient(knotGeo, [
+        new THREE.Color(0xd77cf7),
+        new THREE.Color(0x9a6cf6),
+        new THREE.Color(0x6f8ff8),
+        new THREE.Color(0x5ab8f6),
+      ]);
+      const knot = new THREE.Mesh(knotGeo, glossy());
+      wrap.add(knot);
+
+      // Small cyan ring floating above the knot
+      const ringGeo = new THREE.TorusGeometry(0.38, 0.16, 32, 64);
+      paintGradient(ringGeo, [new THREE.Color(0x79e3f7), new THREE.Color(0x4cc4f2)]);
+      const ring = new THREE.Mesh(ringGeo, glossy());
+      ring.rotation.x = 1.0;
+      wrap.add(ring);
+
+      // Where the object sits in each section. fx/fy are fractions of the visible
+      // half-width/half-height, so positions hold up on any screen size.
+      const stagesWide = {
+        hero:   { fx: 0.55, fy: -0.12, s: 0.92, rx: 0.5,  ry: 0.0, rz: 0.0 },
+        about:  { fx: -0.4, fy: -0.06, s: 0.85, rx: 1.2,  ry: 0.9, rz: 0.35 },
+        invite: { fx: 0.45, fy: -0.12, s: 0.95, rx: -0.3, ry: 2.3, rz: -0.4 },
+        study:  { fx: -0.34, fy: 0.0,  s: 0.8,  rx: 0.9,  ry: 3.7, rz: 0.6 },
+        finale: { fx: 0.0,  fy: -0.2,  s: 0.55, rx: 0.4,  ry: 5.3, rz: 0.0 },
+      };
+      const stagesNarrow = {
+        hero:   { fx: 0.0,   fy: 0.34, s: 0.5,  rx: 0.5,  ry: 0.0, rz: 0.0 },
+        about:  { fx: -0.25, fy: 0.42, s: 0.5,  rx: 1.2,  ry: 0.9, rz: 0.35 },
+        invite: { fx: 0.25,  fy: 0.42, s: 0.55, rx: -0.3, ry: 2.3, rz: -0.4 },
+        study:  { fx: -0.2,  fy: 0.42, s: 0.5,  rx: 0.9,  ry: 3.7, rz: 0.6 },
+        finale: { fx: 0.0,   fy: -0.02, s: 0.45, rx: 0.4,  ry: 5.3, rz: 0.0 },
+      };
+
+      const sections = [...document.querySelectorAll("[data-stage]")];
+      let stages = stagesWide, halfW = 1, halfH = 1, tops = [];
+
+      function resize() {
+        const w = window.innerWidth, h = window.innerHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        halfH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.position.z;
+        halfW = halfH * camera.aspect;
+        stages = w <= 900 ? stagesNarrow : stagesWide;
+        tops = sections.map((s) => s.offsetTop);
+      }
+      window.addEventListener("resize", resize);
+      window.addEventListener("load", resize);
+      resize();
+
+      const ease = (t) => t * t * (3 - 2 * t);
+      const lerp = (a, b, t) => a + (b - a) * t;
+
+      // Blend between the two stages the scroll position sits between
+      function targetFromScroll() {
+        const y = window.scrollY;
+        let i = 0;
+        while (i < tops.length - 1 && y >= tops[i + 1]) i++;
+        const a = stages[sections[i].dataset.stage];
+        const next = sections[Math.min(i + 1, sections.length - 1)];
+        const b = stages[next.dataset.stage];
+        const span = Math.max(1, (tops[i + 1] ?? tops[i] + 1) - tops[i]);
+        const t = ease(Math.min(1, Math.max(0, (y - tops[i]) / span)));
+        const s = lerp(a.s, b.s, t);
+        // keep the whole knot on screen whatever the aspect ratio
+        const limX = Math.max(0, halfW - 2.3 * s), limY = Math.max(0, halfH - 2.6 * s);
+        return {
+          x: THREE.MathUtils.clamp(lerp(a.fx, b.fx, t) * halfW, -limX, limX),
+          y: THREE.MathUtils.clamp(lerp(a.fy, b.fy, t) * halfH, -limY, limY),
+          s,
+          rx: lerp(a.rx, b.rx, t),
+          ry: lerp(a.ry, b.ry, t),
+          rz: lerp(a.rz, b.rz, t),
+        };
+      }
+
+      // Mouse parallax
+      const mouse = { x: 0, y: 0 };
+      window.addEventListener("pointermove", (e) => {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+      });
+
+      const cur = targetFromScroll();
+      const clock = new THREE.Clock();
+      let last = performance.now();
+
+      function tick(now = performance.now()) {
+        const t = reduceMotion ? 0 : clock.getElapsedTime();
+        const tgt = targetFromScroll();
+
+        // ease the object toward its scroll target so moves feel like a glide;
+        // time-based so the glide takes the same time at any frame rate
+        const dt = (now - last) / 1000;
+        last = now;
+        const follow = reduceMotion ? 1 : 1 - Math.pow(0.012, dt);
+        for (const k in cur) cur[k] += (tgt[k] - cur[k]) * follow;
+
+        group.position.set(cur.x, cur.y + Math.sin(t * 0.8) * 0.12, 0);
+        group.scale.setScalar(cur.s);
+        group.rotation.set(cur.rx, cur.ry, cur.rz);
+
+        knot.rotation.y = t * 0.3;
+        knot.rotation.x = Math.sin(t * 0.35) * 0.3;
+
+        ring.position.set(-0.5, 2.7 + Math.sin(t * 1.1 + 1) * 0.15, -0.4);
+        ring.rotation.z = t * 0.6;
+
+        wrap.rotation.y += (mouse.x * 0.3 - wrap.rotation.y) * 0.05;
+        wrap.rotation.x += (mouse.y * 0.18 - wrap.rotation.x) * 0.05;
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+  </script>
+</body>
+</html>
